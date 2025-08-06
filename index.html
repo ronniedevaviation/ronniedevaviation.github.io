@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ronnie's Holdings</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Inter Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0c0c15; /* Even darker blue-black */
+            color: #e0e0e0; /* Light text for contrast */
+            /* More pronounced and dynamic background gradients */
+            background-image: radial-gradient(at 50% 0%, rgba(30, 39, 57, 0.5) 0%, transparent 70%),
+                              radial-gradient(at 80% 20%, rgba(109, 40, 217, 0.15) 0%, transparent 60%),
+                              radial-gradient(at 20% 80%, rgba(20, 150, 250, 0.1) 0%, transparent 70%);
+            background-repeat: no-repeat;
+            background-size: 100% 100%;
+            overflow-x: hidden; /* Prevent horizontal scroll on animations */
+        }
+        .page-section {
+            display: none; /* Hidden by default */
+            animation: fadeIn 0.6s ease-out forwards; /* Slightly longer fade in */
+        }
+        .page-section.active {
+            display: block; /* Shown when active */
+        }
+        .modal {
+            display: none; /* Hidden by default */
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.85); /* Darker overlay */
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(8px); /* More blur */
+        }
+        .modal-content {
+            background-color: #1a1a25; /* Darker modal background */
+            padding: 32px; /* More padding */
+            border-radius: 20px; /* More rounded */
+            box-shadow: 0 15px 30px rgba(0,0,0,0.7); /* Stronger shadow */
+            max-width: 500px; /* Slightly wider */
+            text-align: center;
+            position: relative;
+            border: 1px solid #444; /* Subtle border */
+            animation: slideIn 0.4s ease-out forwards;
+        }
+        .close-button {
+            position: absolute;
+            top: 18px;
+            right: 22px;
+            font-size: 36px; /* Larger close button */
+            font-weight: bold;
+            cursor: pointer;
+            color: #aaa;
+            transition: color 0.2s ease;
+        }
+        .close-button:hover,
+        .close-button:focus {
+            color: #fff; /* White on hover */
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        /* Keyframe Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(30px); } /* More pronounced slide */
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(-70px); } /* More pronounced slide */
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; } /* More subtle pulse */
+        }
+        .loading-pulse {
+            animation: pulse 1.8s infinite ease-in-out; /* Slower pulse */
+        }
+        .button-hover-effect {
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); /* Smoother transition */
+        }
+        .button-hover-effect:hover {
+            transform: translateY(-5px) scale(1.03); /* More lift */
+            box-shadow: 0 12px 24px rgba(0,0,0,0.5); /* Stronger shadow on hover */
+        }
+        .button-active-effect:active {
+            transform: translateY(2px) scale(0.97); /* More press down */
+            filter: brightness(1.2); /* Brighter on click */
+        }
+        /* Spinner animation */
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid #8a2be2; /* Purple top border */
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            vertical-align: middle;
+            margin-right: 8px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .glow-border {
+            position: relative;
+            overflow: hidden;
+        }
+        .glow-border::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, #8a2be2, #4169e1, #8a2be2); /* Purple-blue gradient */
+            z-index: -1;
+            filter: blur(10px);
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+        .page-section.active .glow-border::before {
+            animation: glowPulse 2s infinite alternate;
+            opacity: 1;
+        }
+        @keyframes glowPulse {
+            0% { filter: blur(10px) brightness(0.8); }
+            100% { filter: blur(15px) brightness(1.2); }
+        }
+
+        /* Navbar specific styles for pill shape and hover expansion */
+        .navbar-pill {
+            border-radius: 9999px; /* Fully rounded for pill shape */
+            padding-left: 2.5rem; /* More horizontal padding */
+            padding-right: 2.5rem; /* More horizontal padding */
+            transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); /* Smooth transition for expansion */
+            width: fit-content; /* Adjust width to content */
+            margin-left: auto; /* Center the pill */
+            margin-right: auto; /* Center the pill */
+        }
+        .navbar-pill:hover {
+            transform: scale(1.02); /* Slight expansion on hover */
+            box-shadow: 0 15px 30px rgba(0,0,0,0.6); /* Enhanced shadow on hover */
+        }
+        .navbar-buttons-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center; /* Center buttons horizontally */
+            align-items: center;
+            gap: 1.5rem; /* Space between buttons */
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <!-- Navbar -->
+    <nav class="bg-gray-950 bg-opacity-85 backdrop-filter backdrop-blur-xl p-5 shadow-3xl border-b border-gray-800 navbar-pill mt-4">
+        <div class="container mx-auto flex flex-col md:flex-row justify-between items-center">
+            <h1 class="text-white text-6xl font-extrabold font-inter mb-5 md:mb-0 tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-purple-500 to-cyan-500 drop-shadow-lg">
+                Ronnie's Holdings
+            </h1>
+            <div class="navbar-buttons-container">
+                <button id="ownershipBtn" class="px-7 py-3.5 bg-gradient-to-br from-purple-700 to-indigo-700 text-white font-extrabold rounded-full hover:from-purple-800 hover:to-indigo-800 button-hover-effect button-active-effect shadow-xl text-lg tracking-wide">
+                    Ownership
+                </button>
+                <button id="blacklistedBtn" class="px-7 py-3.5 bg-gradient-to-br from-red-700 to-rose-700 text-white font-extrabold rounded-full hover:from-red-800 hover:to-rose-800 button-hover-effect button-active-effect shadow-xl text-lg tracking-wide">
+                    Blacklisted Airlines
+                </button>
+                <button id="adminBtn" class="px-7 py-3.5 bg-gradient-to-br from-cyan-700 to-blue-700 text-white font-extrabold rounded-full hover:from-cyan-800 hover:to-blue-800 button-hover-effect button-active-effect shadow-xl text-lg tracking-wide">
+                    Admin
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content Area -->
+    <main class="flex-grow container mx-auto p-8">
+
+        <!-- Ownership Page -->
+        <section id="ownershipPage" class="page-section active bg-gray-900 bg-opacity-75 rounded-2xl shadow-3xl mt-12 p-12 border border-gray-800 relative glow-border">
+            <h2 class="text-6xl font-extrabold text-white mb-12 text-center tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-indigo-400 drop-shadow-lg">
+                Ronnie's Valued Groups
+            </h2>
+            <div id="ownedItemsContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+                <!-- Owned groups will be loaded here -->
+                <p class="col-span-full text-center text-gray-400 text-2xl loading-pulse flex items-center justify-center">
+                    <span class="spinner"></span> Loading owned groups...
+                </p>
+            </div>
+        </section>
+
+        <!-- Blacklisted Airlines Page -->
+        <section id="blacklistedPage" class="page-section bg-gray-900 bg-opacity-75 rounded-2xl shadow-3xl mt-12 p-12 border border-gray-800 relative glow-border">
+            <h2 class="text-6xl font-extrabold text-white mb-12 text-center tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-red-400 to-rose-400 drop-shadow-lg">
+                Blacklisted Airlines
+            </h2>
+            <ul id="blacklistedAirlinesContainer" class="space-y-8">
+                <!-- Blacklisted airlines will be loaded here -->
+                <p class="text-center text-gray-400 text-2xl loading-pulse flex items-center justify-center">
+                    <span class="spinner"></span> Loading blacklisted airlines...
+                </p>
+            </ul>
+        </section>
+
+        <!-- Admin Page -->
+        <section id="adminPage" class="page-section bg-gray-900 bg-opacity-75 rounded-2xl shadow-3xl mt-12 p-12 border border-gray-800 relative glow-border">
+            <h2 class="text-6xl font-extrabold text-white mb-12 text-center tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400 drop-shadow-lg">
+                Admin Panel
+            </h2>
+
+            <div id="adminLogin" class="max-w-md mx-auto bg-gray-800 p-10 rounded-2xl shadow-xl border border-gray-700">
+                <p class="text-2xl text-gray-200 mb-8 text-center">Enter Admin Password:</p>
+                <input type="password" id="adminPassword" class="w-full p-4 bg-gray-950 text-white border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-600 mb-8 placeholder-gray-500 text-xl" placeholder="Password">
+                <button id="adminLoginBtn" class="w-full px-8 py-4 bg-gradient-to-br from-cyan-700 to-blue-700 text-white font-extrabold rounded-xl hover:from-cyan-800 hover:to-blue-800 button-hover-effect button-active-effect shadow-xl text-lg tracking-wide">
+                    Login
+                </button>
+                <p id="adminLoginMessage" class="text-center text-red-400 mt-5 text-xl"></p>
+            </div>
+
+            <div id="adminContent" class="hidden mt-16">
+                <p class="text-center text-gray-300 text-xl mb-10">Current User ID: <span id="currentUserId" class="font-mono text-base bg-gray-700 px-3 py-1.5 rounded-md text-gray-100 select-all tracking-wide"></span></p>
+
+                <!-- Add Owned Group Form -->
+                <div class="mb-16 p-10 bg-purple-900 bg-opacity-40 rounded-2xl shadow-xl border border-purple-800">
+                    <h3 class="text-4xl font-bold text-purple-200 mb-8">Add New Owned Group</h3>
+                    <input type="text" id="ownedGroupAirline" class="w-full p-4 bg-gray-950 text-white border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-600 mb-5 placeholder-gray-500 text-xl" placeholder="Airline/group">
+                    <input type="text" id="ownedGroupMembers" class="w-full p-4 bg-gray-950 text-white border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-600 mb-5 placeholder-gray-500 text-xl" placeholder="Group management members">
+                    <input type="text" id="ownedGroupDiscord" class="w-full p-4 bg-gray-950 text-white border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-600 mb-8 placeholder-gray-500 text-xl" placeholder="Discord clickable link">
+                    <button id="addItemBtn" class="w-full px-8 py-4 bg-gradient-to-br from-purple-700 to-indigo-700 text-white font-extrabold rounded-xl hover:from-purple-800 hover:to-indigo-800 button-hover-effect button-active-effect shadow-xl text-lg tracking-wide">
+                        Add Group
+                    </button>
+                    <p id="addItemMessage" class="text-center text-green-400 mt-5 text-xl"></p>
+                </div>
+
+                <!-- Add Blacklisted Airline Form -->
+                <div class="mb-16 p-10 bg-red-900 bg-opacity-40 rounded-2xl shadow-xl border border-red-800">
+                    <h3 class="text-4xl font-bold text-red-200 mb-8">Add New Blacklisted Airline</h3>
+                    <input type="text" id="blacklistedAirlineGroup" class="w-full p-4 bg-gray-950 text-white border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600 mb-5 placeholder-gray-500 text-xl" placeholder="Airline/group">
+                    <input type="text" id="blacklistedOwner" class="w-full p-4 bg-gray-950 text-white border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600 mb-5 placeholder-gray-500 text-xl" placeholder="Owner">
+                    <input type="text" id="blacklistedReason" class="w-full p-4 bg-gray-950 text-white border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600 mb-5 placeholder-gray-500 text-xl" placeholder="Reason">
+                    <input type="text" id="blacklistedExtraNotes" class="w-full p-4 bg-gray-950 text-white border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600 mb-5 placeholder-gray-500 text-xl" placeholder="Extra notes">
+                    <input type="text" id="blacklistedBy" class="w-full p-4 bg-gray-950 text-white border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600 mb-8 placeholder-gray-500 text-xl" placeholder="Blacklisted by">
+                    <button id="addAirlineBtn" class="w-full px-8 py-4 bg-gradient-to-br from-red-700 to-rose-700 text-white font-extrabold rounded-xl hover:from-red-800 hover:to-rose-800 button-hover-effect button-active-effect shadow-xl text-lg tracking-wide">
+                        Add Airline
+                    </button>
+                    <p id="addAirlineMessage" class="text-center text-green-400 mt-5 text-xl"></p>
+                </div>
+
+                <!-- Manage Owned Groups -->
+                <div class="mb-16 p-10 bg-gray-800 rounded-2xl shadow-xl border border-gray-700">
+                    <h3 class="text-4xl font-bold text-gray-200 mb-8">Manage Owned Groups</h3>
+                    <div id="manageOwnedItemsContainer" class="space-y-6">
+                        <!-- Owned groups for management will be loaded here -->
+                        <p class="text-gray-400 text-xl loading-pulse flex items-center justify-center">
+                            <span class="spinner"></span> Loading groups for management...
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Manage Blacklisted Airlines -->
+                <div class="p-10 bg-gray-800 rounded-2xl shadow-xl border border-gray-700">
+                    <h3 class="text-4xl font-bold text-gray-200 mb-8">Manage Blacklisted Airlines</h3>
+                    <ul id="manageBlacklistedAirlinesContainer" class="space-y-6">
+                        <!-- Blacklisted airlines for management will be loaded here -->
+                        <p class="text-gray-400 text-xl loading-pulse flex items-center justify-center">
+                            <span class="spinner"></span> Loading airlines for management...
+                        </p>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Custom Modal for Messages -->
+    <div id="messageModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" id="closeModalBtn">&times;</span>
+            <p id="modalMessage" class="text-2xl font-semibold mb-8 text-gray-100"></p>
+            <button id="modalOkBtn" class="px-10 py-4 bg-gradient-to-br from-purple-700 to-indigo-700 text-white font-extrabold rounded-xl hover:from-purple-800 hover:to-indigo-800 button-hover-effect button-active-effect shadow-xl text-lg tracking-wide">OK</button>
+        </div>
+    </div>
+
+    <!-- Firebase SDKs -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getFirestore, collection, onSnapshot, addDoc, deleteDoc, doc, query } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // --- Global Variables & Firebase Initialization ---
+        let app;
+        let db;
+        let currentUserId = crypto.randomUUID(); // Always generate a random ID if no auth
+        let isAuthReady = false; // Flag to ensure DB is ready
+
+        const ADMIN_PASSWORD = "RONNIEHOLD999"; // Admin password
+
+        // Custom message modal functions
+        const messageModal = document.getElementById('messageModal');
+        const modalMessage = document.getElementById('modalMessage');
+        const closeModalBtn = document.getElementById('closeModalBtn');
+        const modalOkBtn = document.getElementById('modalOkBtn');
+
+        // Function to show messages, now always setting close handlers
+        function showMessage(message, isError = false, isConfirmation = false, onConfirm = null) {
+            modalMessage.textContent = message;
+            modalMessage.className = `text-2xl font-semibold mb-8 ${isError ? 'text-red-400' : 'text-green-400'}`;
+            messageModal.style.display = 'flex';
+
+            // Always set handlers to simply hide the message initially
+            modalOkBtn.onclick = hideMessage;
+            closeModalBtn.onclick = hideMessage;
+
+            // If it's a confirmation, override the OK button's behavior
+            if (isConfirmation && onConfirm) {
+                modalOkBtn.onclick = async () => {
+                    await onConfirm(); // Execute the confirmation action
+                    hideMessage(); // Then hide the message
+                };
+            }
+        }
+
+        function hideMessage() {
+            modalOkBtn.onclick = null; // Clear previous click handler
+            closeModalBtn.onclick = null; // Clear previous click handler
+            messageModal.style.display = 'none';
+        }
+
+        // Global click handler for the modal backdrop
+        window.onclick = function(event) {
+            if (event.target == messageModal) {
+                hideMessage();
+            }
+        };
+
+        // Initialize Firebase when the window loads
+        window.onload = async function() {
+            try {
+                // Hardcoded Firebase configuration
+                const firebaseConfig = {
+                    apiKey: "AIzaSyDYkElYViXJKqja85RteIqNlPcq2iB9lZA",
+                    authDomain: "ssasas-23eb2.firebaseapp.com",
+                    projectId: "ssasas-23eb2",
+                    storageBucket: "ssasas-23eb2.firebasestorage.app",
+                    messagingSenderId: "303001976520",
+                    appId: "1:303001976520:web:bc1c79b445a58b213f6ffd",
+                    measurementId: "G-GRYM6F21QJ"
+                };
+
+                app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+
+                // Set currentUserId and isAuthReady immediately since no authentication is needed
+                document.getElementById('currentUserId').textContent = currentUserId;
+                isAuthReady = true;
+
+                // Load initial data now that Firebase is initialized and ready
+                loadOwnedItems();
+                loadBlacklistedAirlines();
+                loadManageOwnedItems();
+                loadManageBlacklistedAirlines();
+
+            } catch (error) {
+                console.error("Error initializing Firebase:", error);
+                showMessage("Failed to initialize the application. Please check your Firebase configuration.", true);
+            }
+        };
+
+        // --- Page Navigation Logic ---
+        const pageSections = document.querySelectorAll('.page-section');
+
+        function showPage(pageId) {
+            pageSections.forEach(section => {
+                section.classList.remove('active');
+            });
+            document.getElementById(pageId).classList.add('active');
+        }
+
+        document.getElementById('ownershipBtn').addEventListener('click', () => showPage('ownershipPage'));
+        document.getElementById('blacklistedBtn').addEventListener('click', () => showPage('blacklistedPage'));
+        document.getElementById('adminBtn').addEventListener('click', () => showPage('adminPage'));
+
+        // Initially show the ownership page
+        showPage('ownershipPage');
+
+        // --- Ownership Page Functions ---
+        async function loadOwnedItems() {
+            if (!db || !isAuthReady) return; // Wait for Firebase and DB to be ready
+
+            // MANDATORY: Get the app ID from the global variable
+            const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+            // Define the collection path for public data
+            const collectionPath = `artifacts/${appId}/public/data/ownedItems`;
+
+            const ownedItemsContainer = document.getElementById('ownedItemsContainer');
+            ownedItemsContainer.innerHTML = '<p class="col-span-full text-center text-gray-400 text-2xl loading-pulse flex items-center justify-center"><span class="spinner"></span> Loading owned groups...</p>';
+
+            try {
+                onSnapshot(collection(db, collectionPath), (snapshot) => {
+                    const items = [];
+                    snapshot.forEach((doc) => {
+                        items.push({ id: doc.id, ...doc.data() });
+                    });
+                    renderOwnedItems(items);
+                }, (error) => {
+                    console.error("Error fetching owned items:", error);
+                    ownedItemsContainer.innerHTML = '<p class="col-span-full text-center text-red-400 text-2xl">Failed to load owned groups. Please try again.</p>';
+                });
+            } catch (e) {
+                console.error("Error setting up owned items listener:", e);
+                ownedItemsContainer.innerHTML = '<p class="col-span-full text-center text-red-400 text-2xl">An error occurred while setting up group listener.</p>';
+            }
+        }
+
+        function renderOwnedItems(items) {
+            const ownedItemsContainer = document.getElementById('ownedItemsContainer');
+            ownedItemsContainer.innerHTML = ''; // Clear previous content
+
+            if (items.length === 0) {
+                ownedItemsContainer.innerHTML = '<p class="col-span-full text-center text-gray-400 text-2xl">No groups currently listed under Ronnie\'s ownership.</p>';
+                return;
+            }
+
+            items.forEach(item => {
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'bg-gray-800 p-8 rounded-xl shadow-md border border-gray-700 transition-all duration-300 hover:scale-105 hover:shadow-lg';
+                itemDiv.innerHTML = `
+                    <p class="text-3xl font-semibold text-gray-100 mb-3">${item.airlineGroup}</p>
+                    <p class="text-lg text-gray-400">Management Members: <span class="font-mono text-base bg-gray-700 px-3 py-1.5 rounded text-gray-200">${item.managementMembers}</span></p>
+                    <p class="text-lg text-gray-400">Discord: <a href="${item.discordLink}" target="_blank" class="text-blue-400 hover:underline">${item.discordLink}</a></p>
+                `;
+                ownedItemsContainer.appendChild(itemDiv);
+            });
+        }
+
+        // --- Blacklisted Airlines Page Functions ---
+        async function loadBlacklistedAirlines() {
+            if (!db || !isAuthReady) return; // Wait for Firebase and DB to be ready
+
+            // MANDATORY: Get the app ID from the global variable
+            const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+            // Define the collection path for public data
+            const collectionPath = `artifacts/${appId}/public/data/blacklistedAirlines`;
+
+            const blacklistedAirlinesContainer = document.getElementById('blacklistedAirlinesContainer');
+            blacklistedAirlinesContainer.innerHTML = '<p class="text-center text-gray-400 text-2xl loading-pulse flex items-center justify-center"><span class="spinner"></span> Loading blacklisted airlines...</p>';
+
+            try {
+                onSnapshot(collection(db, collectionPath), (snapshot) => {
+                    const airlines = [];
+                    snapshot.forEach((doc) => {
+                        airlines.push({ id: doc.id, ...doc.data() });
+                    });
+                    renderBlacklistedAirlines(airlines);
+                }, (error) => {
+                    console.error("Error fetching blacklisted airlines:", error);
+                    blacklistedAirlinesContainer.innerHTML = '<p class="text-center text-red-400 text-2xl">Failed to load blacklisted airlines. Please try again.</p>';
+                });
+            } catch (e) {
+                console.error("Error setting up blacklisted airlines listener:", e);
+                blacklistedAirlinesContainer.innerHTML = '<p class="text-center text-red-400 text-2xl">An error occurred while setting up airline listener.</p>';
+            }
+        }
+
+        function renderBlacklistedAirlines(airlines) {
+            const blacklistedAirlinesContainer = document.getElementById('blacklistedAirlinesContainer');
+            blacklistedAirlinesContainer.innerHTML = ''; // Clear previous content
+
+            if (airlines.length === 0) {
+                blacklistedAirlinesContainer.innerHTML = '<p class="text-center text-gray-400 text-2xl">No airlines currently on the blacklist.</p>';
+                return;
+            }
+
+            airlines.forEach(airline => {
+                const listItem = document.createElement('li');
+                listItem.className = 'bg-red-900 bg-opacity-50 p-6 rounded-xl shadow-sm border border-red-800 flex flex-col md:flex-row md:items-center md:justify-between transition-all duration-300 hover:scale-102 hover:shadow-lg';
+                listItem.innerHTML = `
+                    <div class="flex-grow mb-4 md:mb-0">
+                        <p class="text-3xl font-medium text-red-200">${airline.airlineGroup}</p>
+                        <p class="text-lg text-red-300">Owner: ${airline.owner}</p>
+                        <p class="text-lg text-red-300">Reason: ${airline.reason}</p>
+                        <p class="text-lg text-red-300">Extra Notes: ${airline.extraNotes}</p>
+                        <p class="text-lg text-red-300">Blacklisted By: ${airline.blacklistedBy}</p>
+                    </div>
+                `;
+                blacklistedAirlinesContainer.appendChild(listItem);
+            });
+        }
+
+        // --- Admin Page Functions ---
+        const adminPasswordInput = document.getElementById('adminPassword');
+        const adminLoginBtn = document.getElementById('adminLoginBtn');
+        const adminLoginMessage = document.getElementById('adminLoginMessage');
+        const adminLoginSection = document.getElementById('adminLogin');
+        const adminContentSection = document.getElementById('adminContent');
+
+        adminLoginBtn.addEventListener('click', () => {
+            if (adminPasswordInput.value === ADMIN_PASSWORD) {
+                adminLoginSection.classList.add('hidden');
+                adminContentSection.classList.remove('hidden');
+                adminLoginMessage.textContent = '';
+                showMessage("Admin access granted!");
+            } else {
+                adminLoginMessage.textContent = "Incorrect password. Please try again.";
+                showMessage("Incorrect password. Please try again.", true);
+            }
+            adminPasswordInput.value = ''; // Clear password input
+        });
+
+        // Add Owned Group
+        const ownedGroupAirlineInput = document.getElementById('ownedGroupAirline');
+        const ownedGroupMembersInput = document.getElementById('ownedGroupMembers');
+        const ownedGroupDiscordInput = document.getElementById('ownedGroupDiscord');
+        const addItemBtn = document.getElementById('addItemBtn');
+        const addItemMessage = document.getElementById('addItemMessage');
+
+        addItemBtn.addEventListener('click', async () => {
+            if (!db || !isAuthReady) {
+                showMessage("Firebase not ready. Please try again.", true);
+                return;
+            }
+            const airlineGroup = ownedGroupAirlineInput.value.trim();
+            const managementMembers = ownedGroupMembersInput.value.trim();
+            const discordLink = ownedGroupDiscordInput.value.trim();
+
+            if (!airlineGroup || !managementMembers || !discordLink) {
+                showMessage("Please fill in all fields for Owned Group.", true);
+                return;
+            }
+
+            // MANDATORY: Get the app ID from the global variable
+            const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+            const collectionPath = `artifacts/${appId}/public/data/ownedItems`;
+
+            try {
+                await addDoc(collection(db, collectionPath), {
+                    airlineGroup: airlineGroup,
+                    managementMembers: managementMembers,
+                    discordLink: discordLink
+                });
+                ownedGroupAirlineInput.value = '';
+                ownedGroupMembersInput.value = '';
+                ownedGroupDiscordInput.value = '';
+                showMessage("Group added successfully!");
+            } catch (e) {
+                console.error("Error adding document: ", e);
+                showMessage("Error adding group. Please try again.", true);
+            }
+        });
+
+        // Add Blacklisted Airline
+        const blacklistedAirlineGroupInput = document.getElementById('blacklistedAirlineGroup');
+        const blacklistedOwnerInput = document.getElementById('blacklistedOwner');
+        const blacklistedReasonInput = document.getElementById('blacklistedReason');
+        const blacklistedExtraNotesInput = document.getElementById('blacklistedExtraNotes');
+        const blacklistedByInput = document.getElementById('blacklistedBy');
+        const addAirlineBtn = document.getElementById('addAirlineBtn');
+        const addAirlineMessage = document.getElementById('addAirlineMessage');
+
+        addAirlineBtn.addEventListener('click', async () => {
+            if (!db || !isAuthReady) {
+                showMessage("Firebase not ready. Please try again.", true);
+                return;
+            }
+            const airlineGroup = blacklistedAirlineGroupInput.value.trim();
+            const owner = blacklistedOwnerInput.value.trim();
+            const reason = blacklistedReasonInput.value.trim();
+            const extraNotes = blacklistedExtraNotesInput.value.trim();
+            const blacklistedBy = blacklistedByInput.value.trim();
+
+            if (!airlineGroup || !owner || !reason || !extraNotes || !blacklistedBy) {
+                showMessage("Please fill in all fields for Blacklisted Airline.", true);
+                return;
+            }
+
+            // MANDATORY: Get the app ID from the global variable
+            const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+            const collectionPath = `artifacts/${appId}/public/data/blacklistedAirlines`;
+
+            try {
+                await addDoc(collection(db, collectionPath), {
+                    airlineGroup: airlineGroup,
+                    owner: owner,
+                    reason: reason,
+                    extraNotes: extraNotes,
+                    blacklistedBy: blacklistedBy
+                });
+                blacklistedAirlineGroupInput.value = '';
+                blacklistedOwnerInput.value = '';
+                blacklistedReasonInput.value = '';
+                blacklistedExtraNotesInput.value = '';
+                blacklistedByInput.value = '';
+                showMessage("Airline added successfully!");
+            } catch (e) {
+                console.error("Error adding document: ", e);
+                showMessage("Error adding airline. Please try again.", true);
+            }
+        });
+
+        // --- Manage Owned Groups (Admin) ---
+        async function loadManageOwnedItems() {
+            if (!db || !isAuthReady) return;
+
+            // MANDATORY: Get the app ID from the global variable
+            const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+            const collectionPath = `artifacts/${appId}/public/data/ownedItems`;
+
+            const manageOwnedItemsContainer = document.getElementById('manageOwnedItemsContainer');
+            manageOwnedItemsContainer.innerHTML = '<p class="text-gray-400 text-xl loading-pulse flex items-center justify-center"><span class="spinner"></span> Loading groups for management...</p>';
+
+            try {
+                onSnapshot(collection(db, collectionPath), (snapshot) => {
+                    const items = [];
+                    snapshot.forEach((doc) => {
+                        items.push({ id: doc.id, ...doc.data() });
+                    });
+                    renderManageOwnedItems(items);
+                }, (error) => {
+                    console.error("Error fetching owned items for management:", error);
+                    manageOwnedItemsContainer.innerHTML = '<p class="text-red-400 text-xl">Failed to load groups for management.</p>';
+                });
+            } catch (e) {
+                console.error("Error setting up manage owned items listener:", e);
+                manageOwnedItemsContainer.innerHTML = '<p class="text-red-400 text-xl">An error occurred while setting up group management listener.</p>';
+            }
+        }
+
+        function renderManageOwnedItems(items) {
+            const manageOwnedItemsContainer = document.getElementById('manageOwnedItemsContainer');
+            manageOwnedItemsContainer.innerHTML = ''; // Clear previous content
+
+            if (items.length === 0) {
+                manageOwnedItemsContainer.innerHTML = '<p class="text-gray-400 text-xl">No groups to manage.</p>';
+                return;
+            }
+
+            items.forEach(item => {
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'flex items-center justify-between bg-gray-900 p-5 rounded-lg shadow-sm border border-gray-700 transition-all duration-300 hover:scale-102 hover:shadow-lg';
+                itemDiv.innerHTML = `
+                    <div class="flex-grow">
+                        <p class="text-xl font-medium text-gray-100">${item.airlineGroup}</p>
+                        <p class="text-base text-gray-400">Members: ${item.managementMembers}</p>
+                        <p class="text-base text-gray-400">Discord: <a href="${item.discordLink}" target="_blank" class="text-blue-400 hover:underline">${item.discordLink}</a></p>
+                    </div>
+                    <button data-id="${item.id}" class="delete-owned-item-btn px-5 py-2.5 bg-gradient-to-br from-red-700 to-rose-700 text-white rounded-md hover:from-red-800 hover:to-rose-800 button-hover-effect button-active-effect shadow-md">
+                        Delete
+                    </button>
+                `;
+                manageOwnedItemsContainer.appendChild(itemDiv);
+            });
+
+            // Add event listeners to delete buttons
+            document.querySelectorAll('.delete-owned-item-btn').forEach(button => {
+                button.addEventListener('click', async (event) => {
+                    const itemIdToDelete = event.target.dataset.id;
+                    showMessage("Are you sure you want to delete this group? This action cannot be undone.", true, true, async () => {
+                        await deleteOwnedItem(itemIdToDelete);
+                    });
+                });
+            });
+        }
+
+        async function deleteOwnedItem(itemId) {
+            if (!db || !isAuthReady) {
+                showMessage("Firebase not ready. Please try again.", true);
+                return;
+            }
+            // MANDATORY: Get the app ID from the global variable
+            const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+            const docPath = `artifacts/${appId}/public/data/ownedItems/${itemId}`;
+
+            try {
+                await deleteDoc(doc(db, docPath));
+                showMessage("Group deleted successfully!");
+            } catch (e) {
+                console.error("Error deleting document: ", e);
+                showMessage("Error deleting group. Please try again.", true);
+            }
+        }
+
+        // --- Manage Blacklisted Airlines (Admin) ---
+        async function loadManageBlacklistedAirlines() {
+            if (!db || !isAuthReady) return;
+
+            // MANDATORY: Get the app ID from the global variable
+            const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+            const collectionPath = `artifacts/${appId}/public/data/blacklistedAirlines`;
+
+            const manageBlacklistedAirlinesContainer = document.getElementById('manageBlacklistedAirlinesContainer');
+            manageBlacklistedAirlinesContainer.innerHTML = '<p class="text-gray-400 text-xl loading-pulse flex items-center justify-center"><span class="spinner"></span> Loading airlines for management...</p>';
+
+            try {
+                onSnapshot(collection(db, collectionPath), (snapshot) => {
+                    const airlines = [];
+                    snapshot.forEach((doc) => {
+                        airlines.push({ id: doc.id, ...doc.data() });
+                    });
+                    renderManageBlacklistedAirlines(airlines);
+                }, (error) => {
+                    console.error("Error fetching blacklisted airlines for management:", error);
+                    manageBlacklistedAirlinesContainer.innerHTML = '<p class="text-red-400 text-xl">Failed to load airlines for management.</p>';
+                });
+            } catch (e) {
+                console.error("Error setting up manage blacklisted airlines listener:", e);
+                manageBlacklistedAirlinesContainer.innerHTML = '<p class="text-red-400 text-xl">An error occurred while setting up airline management listener.</p>';
+            }
+        }
+
+        function renderManageBlacklistedAirlines(airlines) {
+            const manageBlacklistedAirlinesContainer = document.getElementById('manageBlacklistedAirlinesContainer');
+            manageBlacklistedAirlinesContainer.innerHTML = ''; // Clear previous content
+
+            if (airlines.length === 0) {
+                manageBlacklistedAirlinesContainer.innerHTML = '<p class="text-gray-400 text-xl">No airlines to manage.</p>';
+                return;
+            }
+
+            airlines.forEach(airline => {
+                const listItem = document.createElement('li');
+                listItem.className = 'flex items-center justify-between bg-gray-900 p-5 rounded-lg shadow-sm border border-gray-700 transition-all duration-300 hover:scale-102 hover:shadow-lg';
+                listItem.innerHTML = `
+                    <div class="flex-grow">
+                        <p class="text-xl font-medium text-gray-100">${airline.airlineGroup}</p>
+                        <p class="text-base text-gray-400">Owner: ${airline.owner}</p>
+                        <p class="text-base text-gray-400">Reason: ${airline.reason}</p>
+                        <p class="text-base text-gray-400">Extra Notes: ${airline.extraNotes}</p>
+                        <p class="text-base text-gray-400">Blacklisted By: ${airline.blacklistedBy}</p>
+                    </div>
+                    <button data-id="${airline.id}" class="delete-blacklisted-airline-btn px-5 py-2.5 bg-gradient-to-br from-red-700 to-rose-700 text-white rounded-md hover:from-red-800 hover:to-rose-800 button-hover-effect button-active-effect shadow-md">
+                        Delete
+                    </button>
+                `;
+                manageBlacklistedAirlinesContainer.appendChild(listItem);
+            });
+
+            // Add event listeners to delete buttons
+            document.querySelectorAll('.delete-blacklisted-airline-btn').forEach(button => {
+                button.addEventListener('click', async (event) => {
+                    const airlineIdToDelete = event.target.dataset.id;
+                    showMessage("Are you sure you want to delete this airline? This action cannot be undone.", true, true, async () => {
+                        await deleteBlacklistedAirline(airlineIdToDelete);
+                    });
+                });
+            });
+        }
+
+        async function deleteBlacklistedAirline(airlineId) {
+            if (!db || !isAuthReady) {
+                showMessage("Firebase not ready. Please try again.", true);
+                return;
+            }
+            // MANDATORY: Get the app ID from the global variable
+            const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+            const docPath = `artifacts/${appId}/public/data/blacklistedAirlines/${airlineId}`;
+
+            try {
+                await deleteDoc(doc(db, docPath));
+                showMessage("Airline deleted successfully!");
+            } catch (e) {
+                console.error("Error deleting document: ", e);
+                showMessage("Error deleting airline. Please try again.", true);
+            }
+        }
+    </script>
+</body>
+</html>
